@@ -134,3 +134,68 @@ fn ipam_rejects_overlapping_windows_and_supports_ipv6() {
     );
     assert!(a.allocate("a", "ipv6-node").unwrap().address.is_ipv6());
 }
+
+#[test]
+fn vlan_cycles_and_undeclared_link_dependencies_are_rejected() {
+    let mut v = serde_json::to_value(network()).unwrap();
+    v["interfaces"][0]["link"] = json!({"kind":"bridge","ports":["knha42"]});
+    let n: Network = serde_json::from_value(v).unwrap();
+    assert!(n.validate().unwrap_err().to_string().contains("cycle"));
+    let mut v = serde_json::to_value(network()).unwrap();
+    v["interfaces"][1]["link"]["parent"] = json!("missing0");
+    assert!(
+        serde_json::from_value::<Network>(v)
+            .unwrap()
+            .plan()
+            .is_err()
+    );
+}
+#[test]
+fn dhcp_excludes_network_broadcast_and_invalid_dns_options() {
+    let mut v = serde_json::to_value(network()).unwrap();
+    v["dhcp"] = json!([{"interface":"knha42","subnet":"10.42.0.0/24","start":"10.42.0.20","end":"10.42.0.255","router":"10.42.0.1"}]);
+    assert!(
+        serde_json::from_value::<Network>(v.clone())
+            .unwrap()
+            .validate()
+            .is_err()
+    );
+    v["dhcp"][0]["end"] = json!("10.42.0.50");
+    v["dhcp"][0]["dns"] = json!(["0.0.0.0"]);
+    assert!(
+        serde_json::from_value::<Network>(v)
+            .unwrap()
+            .validate()
+            .is_err()
+    );
+}
+#[test]
+fn dns_zone_identity_ignores_case_and_root_dot() {
+    let mut v = serde_json::to_value(network()).unwrap();
+    let zone = json!({"name":"Example.test","primary_ns":"ns.example.test","admin_mailbox":"hostmaster.example.test","records":[]});
+    let mut duplicate = zone.clone();
+    duplicate["name"] = json!("example.test.");
+    v["zones"] = json!([zone, duplicate]);
+    assert!(
+        serde_json::from_value::<Network>(v)
+            .unwrap()
+            .validate()
+            .is_err()
+    );
+}
+#[test]
+fn ipam_does_not_repermission_existing_shared_directories() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(root.path().join("other-data"), "retained").unwrap();
+    std::fs::set_permissions(root.path(), std::fs::Permissions::from_mode(0o755)).unwrap();
+    assert!(Ipam::open(root.path()).is_err());
+    assert_eq!(
+        root.path().metadata().unwrap().permissions().mode() & 0o777,
+        0o755
+    );
+    assert_eq!(
+        std::fs::read_to_string(root.path().join("other-data")).unwrap(),
+        "retained"
+    );
+}
