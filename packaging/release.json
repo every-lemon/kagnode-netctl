@@ -1,0 +1,10 @@
+{
+  "repository": "kagnode-netctl",
+  "version_file": "Cargo.toml",
+  "version_pattern": "version = \"([^\"]+)\"",
+  "kind": "native-rust",
+  "license": "AGPL-3.0-only",
+  "revision": 1,
+  "channel": "stable",
+  "native_publication": "Source preview; networking activation and package qualification remain pending"
+}

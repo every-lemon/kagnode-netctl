@@ -1,0 +1,21 @@
+[
+  ".github/workflows/checks.yml",
+  ".gitignore",
+  "CHANGELOG.md",
+  "Cargo.lock",
+  "Cargo.toml",
+  "LICENSE",
+  "README.md",
+  "assets/ARTWORK-LICENSE",
+  "assets/mark.svg",
+  "docs/ARCHITECTURE.md",
+  "docs/STRUCTURE.md",
+  "docs/vlan-example.json",
+  "packaging/release.json",
+  "packaging/source-files.json",
+  "src/ipam.rs",
+  "src/lib.rs",
+  "src/main.rs",
+  "src/observe.rs",
+  "tests/network.rs"
+]

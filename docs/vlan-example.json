@@ -1,0 +1,7 @@
+{
+  "interfaces": [
+    { "name": "eth0", "link": { "kind": "physical" }, "addresses": ["192.0.2.10/24"] },
+    { "name": "knha42", "link": { "kind": "vlan", "parent": "eth0", "tag": 42 }, "addresses": ["10.42.0.10/24"] }
+  ],
+  "dns_servers": ["192.0.2.53"]
+}
