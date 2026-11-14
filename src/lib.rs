@@ -19,7 +19,8 @@ pub fn name(v: &str) -> bool {
             .all(|b| b.is_ascii_alphanumeric() || b"_-".contains(&b))
 }
 fn dns_name(v: &str) -> bool {
-    v.len() <= 253
+    !v.ends_with("..")
+        && v.len() <= 253
         && !v.is_empty()
         && v.trim_end_matches('.').split('.').all(|l| {
             !l.is_empty()
@@ -235,7 +236,7 @@ impl Network {
                 _ => {}
             }
         }
-        // Prevent bridge/bond double ownership and dependency cycles.
+        // Prevent double ownership and cycles across VLAN, bridge and bond dependencies.
         let mut parents = BTreeMap::new();
         for i in &self.interfaces {
             if let Link::Bridge { ports } | Link::Bond { ports, .. } = &i.link {
@@ -247,13 +248,41 @@ impl Network {
                 }
             }
         }
+        let mut dependencies = BTreeMap::<&str, Vec<&str>>::new();
         for i in &self.interfaces {
-            let mut visited = HashSet::new();
-            let mut current = i.name.as_str();
-            while let Some(parent) = parents.get(current) {
-                ensure!(visited.insert(current), "Network member cycle detected");
-                current = parent;
+            let links = match &i.link {
+                Link::Vlan { parent, .. } => vec![parent.as_str()],
+                Link::Bridge { ports } | Link::Bond { ports, .. } => {
+                    ports.iter().map(String::as_str).collect()
+                }
+                Link::Physical => Vec::new(),
+            };
+            ensure!(
+                links.iter().all(|p| names.contains(p)),
+                "Declare every parent/member interface before rendering"
+            );
+            dependencies.insert(i.name.as_str(), links);
+        }
+        fn visit<'a>(
+            node: &'a str,
+            graph: &BTreeMap<&'a str, Vec<&'a str>>,
+            active: &mut HashSet<&'a str>,
+            complete: &mut HashSet<&'a str>,
+        ) -> Result<()> {
+            if complete.contains(node) {
+                return Ok(());
             }
+            ensure!(active.insert(node), "Network dependency cycle detected");
+            for child in &graph[node] {
+                visit(child, graph, active, complete)?;
+            }
+            active.remove(node);
+            complete.insert(node);
+            Ok(())
+        }
+        let mut complete = HashSet::new();
+        for node in dependencies.keys() {
+            visit(node, &dependencies, &mut HashSet::new(), &mut complete)?;
         }
         for r in &self.routes {
             ensure!(
@@ -283,6 +312,26 @@ impl Network {
                 anyhow::bail!("DHCPv4 requires IPv4 addresses")
             };
             let (start, end, router) = (u32::from(start), u32::from(end), u32::from(router));
+            let IpNet::V4(subnet) = d.subnet else {
+                unreachable!()
+            };
+            let network = u32::from(subnet.network());
+            let broadcast = u32::from(subnet.broadcast());
+            ensure!(
+                subnet.prefix_len() < 31
+                    && start > network
+                    && end < broadcast
+                    && router > network
+                    && router < broadcast,
+                "DHCP cannot allocate network/broadcast addresses or use them as its router"
+            );
+            ensure!(
+                d.dns.len() <= 16
+                    && d.dns
+                        .iter()
+                        .all(|ip| !ip.is_unspecified() && !ip.is_multicast() && ip.is_ipv4()),
+                "DHCPv4 DNS servers must be bounded unicast IPv4 addresses"
+            );
             ensure!(
                 start <= end && end - start < 65536 && (router < start || router > end),
                 "Invalid DHCP range or router inside the allocation pool"
@@ -320,7 +369,7 @@ impl Network {
                 dns_name(&z.name)
                     && dns_name(&z.primary_ns)
                     && dns_name(&z.admin_mailbox)
-                    && zones.insert(z.name.to_lowercase())
+                    && zones.insert(z.name.trim_end_matches('.').to_lowercase())
                     && z.records.len() <= 4096,
                 "Invalid or duplicate DNS zone"
             );

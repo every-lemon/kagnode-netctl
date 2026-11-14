@@ -31,14 +31,31 @@ fn address(value: u128, v4: bool) -> IpAddr {
 }
 impl Ipam {
     pub fn open(root: &Path) -> Result<Self> {
-        ensure!(root.is_absolute(), "Use an absolute private IPAM directory");
+        ensure!(
+            root.is_absolute()
+                && !root
+                    .components()
+                    .any(|p| matches!(p, std::path::Component::ParentDir)),
+            "Use an absolute private IPAM directory without traversal"
+        );
         for parent in root.ancestors().filter(|p| p.exists()) {
-            ensure!(!parent.is_symlink(), "IPAM directories cannot be symlinks");
+            let m = parent.symlink_metadata()?;
+            ensure!(
+                m.is_dir()
+                    && !m.file_type().is_symlink()
+                    && (m.uid() == 0 || m.uid() == unsafe { libc::geteuid() })
+                    && (m.mode() & 0o022 == 0 || (m.mode() & 0o1000 != 0 && m.uid() == 0)),
+                "IPAM ancestors must be protected owned directories"
+            );
         }
         std::fs::create_dir_all(root)?;
         ensure!(
             root.metadata()?.uid() == unsafe { libc::geteuid() },
             "IPAM directory has another owner"
+        );
+        ensure!(
+            root.metadata()?.mode() & 0o077 == 0 || std::fs::read_dir(root)?.next().is_none(),
+            "Use a private IPAM directory; existing shared files and permissions are retained"
         );
         std::fs::set_permissions(root, std::fs::Permissions::from_mode(0o700))?;
         let file = root.join("ipam.sqlite");
@@ -46,11 +63,17 @@ impl Ipam {
         if file.exists() {
             let m = file.symlink_metadata()?;
             ensure!(
-                m.is_file() && m.nlink() == 1 && m.uid() == unsafe { libc::geteuid() },
+                m.is_file()
+                    && m.nlink() == 1
+                    && m.uid() == unsafe { libc::geteuid() }
+                    && m.mode() & 0o077 == 0,
                 "Unsafe IPAM database ownership"
             );
         }
-        let db = Connection::open(&file)?;
+        let db = Connection::open_with_flags(
+            &file,
+            rusqlite::OpenFlags::default() | rusqlite::OpenFlags::SQLITE_OPEN_NOFOLLOW,
+        )?;
         std::fs::set_permissions(file, std::fs::Permissions::from_mode(0o600))?;
         db.busy_timeout(std::time::Duration::from_secs(5))?;
         db.execute_batch("PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; CREATE TABLE IF NOT EXISTS pools(name TEXT PRIMARY KEY,subnet TEXT NOT NULL,start TEXT NOT NULL,end TEXT NOT NULL);CREATE TABLE IF NOT EXISTS leases(pool TEXT NOT NULL REFERENCES pools(name),owner TEXT NOT NULL,address TEXT NOT NULL UNIQUE,PRIMARY KEY(pool,owner));")?;
@@ -76,6 +99,14 @@ impl Ipam {
             !start.is_unspecified() && !start.is_multicast() && !end.is_multicast(),
             "Choose unicast allocation addresses"
         );
+        if let IpNet::V4(net) = subnet
+            && net.prefix_len() < 31
+        {
+            ensure!(
+                start != IpAddr::V4(net.network()) && end != IpAddr::V4(net.broadcast()),
+                "IPv4 allocation windows cannot include network or broadcast addresses"
+            );
+        }
         let tx = self.db.transaction()?;
         {
             let mut q = tx.prepare("SELECT start,end FROM pools")?;
