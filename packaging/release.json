@@ -6,5 +6,6 @@
   "license": "AGPL-3.0-only",
   "revision": 1,
   "channel": "stable",
-  "native_publication": "Source preview; networking activation and package qualification remain pending"
+  "native_publication": "Source preview; networking activation and package qualification remain pending",
+  "source_repository": "kagnode-network"
 }
