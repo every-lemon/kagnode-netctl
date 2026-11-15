@@ -5,7 +5,7 @@ use std::{net::IpAddr, path::PathBuf};
 #[derive(Parser)]
 #[command(
     version,
-    about = "KagNode. Netctl — inspect, plan and review networking"
+    about = "KagNode. Network — inspect, plan and review networking"
 )]
 struct Args {
     #[command(subcommand)]
