@@ -1,10 +1,12 @@
 <p align="center"><img src="assets/mark.svg" width="72" alt="KagNode."></p>
 
-# KagNode. Netctl
+# KagNode. Network
+
+_Formerly KagNode. Netctl. The repository (`kagnode-netctl`), crate, executable (`kagnode-netctl`), configuration and state paths (`/srv/kagnode/netctl`, `/etc/kagnode/netctl`), JSON product identifier and published history keep their original identifiers._
 
 ## Overview
 
-Rust tooling for inspected, reviewable Linux networking and network services. Netctl is part of the KagNode Daemon ecosystem.
+Rust tooling for inspected, reviewable Linux networking and network services. KagNode. Network is part of the KagNode Daemon ecosystem.
 
 ## Release status
 
@@ -17,7 +19,7 @@ Rust tooling for inspected, reviewable Linux networking and network services. Ne
 - Configuration output for systemd-networkd, Kea DHCPv4, Unbound, Knot DNS, FRR BGP and an owned nftables table.
 - Persistent IPv4/IPv6 IPAM allocation windows with unique, idempotent allocation and explicit release.
 - Deterministic plan hashes, fresh output directories, input bounds and source-visible validation.
-- HA VLAN/trunk requirements appear in the plan. Netctl does not assume that creating a VLAN interface configures intervening switches.
+- HA VLAN/trunk requirements appear in the plan. KagNode. Network does not assume that creating a VLAN interface configures intervening switches.
 
 ## Requirements
 

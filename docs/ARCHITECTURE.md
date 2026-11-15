@@ -6,4 +6,4 @@ The current configuration backend is networkd. Existing NetworkManager, ifupdown
 
 Network service roles are explicit: Kea DHCPv4, Unbound recursive DNS, Knot authoritative DNS, FRR BGP and nftables. Existing services keep their ports and configuration. Conflict detection, zone-serial management, route policies, timed transaction rollback and service-specific validation are release gates for live activation. DHCPv6/RA, additional dynamic routing protocols and physical network-device writes are outside the initial renderer.
 
-Daemon uses Netctl readiness when reviewing a same-site HA network. Host, witness, fencing and synchronous-storage evidence remain separate requirements. A planned VLAN never authorizes promotion. Cluster and storage ownership belong to the qualified Pacemaker/Corosync/DRBD adapters, not this configuration renderer.
+Daemon uses KagNode. Network readiness when reviewing a same-site HA network. Host, witness, fencing and synchronous-storage evidence remain separate requirements. A planned VLAN never authorizes promotion. Cluster and storage ownership belong to the qualified Pacemaker/Corosync/DRBD adapters, not this configuration renderer.
