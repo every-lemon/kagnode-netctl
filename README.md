@@ -8,6 +8,20 @@ _Formerly KagNode. Netctl. The repository (`kagnode-netctl`), crate, executable 
 
 Rust tooling for inspected, reviewable Linux networking and network services. KagNode. Network is part of the KagNode Daemon ecosystem.
 
+### What it looks like
+
+A plan run from the repository's VLAN example, followed by an IP allocation, in a throwaway directory. Nothing on the host is changed. The addresses are documentation examples.
+
+![Terminal output of a network plan with its review notes and checksum, then an IP pool and one allocation](docs/images/plan-and-ipam.png)
+
+### How it works
+
+1. **Declare.** You describe the wanted network (VLANs, bridges, bonds, addresses, routes, DNS) in typed JSON. Unknown fields are rejected.
+2. **Plan.** `plan` validates the declaration and writes a fresh directory with the configuration files for systemd-networkd, Kea, Unbound, Knot DNS, FRR and an owned nftables table, plus `plan.json` with a checksum, prerequisites and review notes.
+3. **Review.** The plan states `live_activation: false` and lists what a person must check first, such as whether a switch trunk carries the VLAN. The same declaration always produces the same plan hash.
+4. **Nothing is applied for you.** Netctl only reads the host and writes files into a new directory. Applying them needs a qualified activation adapter, console access and a timed rollback, which are not available yet.
+5. **IPAM.** Address pools and allocations are kept in a private SQLite file. An allocation is unique and repeatable for the same owner, and releasing one is an explicit step.
+
 ## Release status
 
 **5.0.0 source preview.** Host inspection, typed configuration planning and persistent IPAM have automated coverage. Plans render owned configuration files; live host activation, automatic HA, physical-switch changes and Proxmox writes remain blocked until their transaction and recovery adapters are qualified. A generated plan is not a successful network change.
@@ -29,10 +43,10 @@ Rust 1.88 or newer for development. Linux inspection needs `iproute2` and system
 
 Build with `cargo build --release --locked`. The executable is `target/release/kagnode-netctl`.
 
-| Payload | Formats | Qualification |
-| --- | --- | --- |
-| Editable source | Git checkout; GitHub source `.zip` / `.tar.gz` | Preview; see validation scope |
-| Application and distribution packages | `.deb`, `.rpm`, `.tar.xz`, `.tar.gz`, `.zip` | Release packaging pending native lifecycle checks |
+| Payload                               | Formats                                        | Qualification                                     |
+| ------------------------------------- | ---------------------------------------------- | ------------------------------------------------- |
+| Editable source                       | Git checkout; GitHub source `.zip` / `.tar.gz` | Preview; see validation scope                     |
+| Application and distribution packages | `.deb`, `.rpm`, `.tar.xz`, `.tar.gz`, `.zip`   | Release packaging pending native lifecycle checks |
 
 Use the published source rather than a third-party install script. Package installation will not silently configure networking.
 
