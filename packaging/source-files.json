@@ -10,6 +10,7 @@
   "assets/mark.svg",
   "docs/ARCHITECTURE.md",
   "docs/STRUCTURE.md",
+  "docs/images/plan-and-ipam.png",
   "docs/vlan-example.json",
   "packaging/release.json",
   "packaging/source-files.json",
