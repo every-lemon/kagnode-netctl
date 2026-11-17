@@ -1,5 +1,6 @@
 [
   ".github/workflows/checks.yml",
+  ".github/workflows/source-candidates.yml",
   ".gitignore",
   "CHANGELOG.md",
   "Cargo.lock",
@@ -9,6 +10,7 @@
   "assets/ARTWORK-LICENSE",
   "assets/mark.svg",
   "docs/ARCHITECTURE.md",
+  "docs/SOURCE-CANDIDATES.md",
   "docs/STRUCTURE.md",
   "docs/images/plan-and-ipam.png",
   "docs/vlan-example.json",
@@ -18,5 +20,12 @@
   "src/lib.rs",
   "src/main.rs",
   "src/observe.rs",
-  "tests/network.rs"
+  "tests/network.rs",
+  "tools/release/Cargo.lock",
+  "tools/release/Cargo.toml",
+  "tools/release/src/lib.rs",
+  "tools/release/src/main.rs",
+  "tools/release/src/product.rs",
+  "tools/release/src/tests.rs",
+  "tools/release/tests/cli.rs"
 ]
