@@ -4,7 +4,7 @@ version = "5.0.0"
 edition = "2024"
 rust-version = "1.88"
 license = "AGPL-3.0-only"
-repository = "https://github.com/every-lemon/kagnode-netctl"
+repository = "https://github.com/every-lemon/kagnode-network"
 description = "Reviewed networking, IPAM, network services and HA network readiness"
 
 [dependencies]

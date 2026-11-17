@@ -10,3 +10,7 @@
 - `.github/workflows/`: non-mutating formatting, static and test checks.
 
 `target/`, runtime databases, lease state, private credentials and generated review directories are not published source. Generated service configuration belongs in a reviewed output directory, never alongside canonical editable code.
+
+## Repository identity
+
+The canonical repository is [every-lemon/kagnode-network](https://github.com/every-lemon/kagnode-network). Cargo package/executable `kagnode-netctl`, service names, configuration paths and JSON product identifiers remain unchanged. `source_repository` records the new GitHub name separately from the compatibility package identity in release metadata.

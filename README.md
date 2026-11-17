@@ -41,6 +41,8 @@ Rust 1.88 or newer for development. Linux inspection needs `iproute2` and system
 
 ## Installation and downloads
 
+Canonical source: [every-lemon/kagnode-network](https://github.com/every-lemon/kagnode-network). The previous repository URL redirects here. Existing `kagnode-netctl` package, command and service identifiers remain compatible.
+
 Build with `cargo build --release --locked`. The executable is `target/release/kagnode-netctl`.
 
 | Payload                               | Formats                                        | Qualification                                     |
