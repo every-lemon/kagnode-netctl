@@ -2,7 +2,7 @@
 
 # KagNode. Network
 
-_Formerly KagNode. Netctl. The repository (`kagnode-netctl`), crate, executable (`kagnode-netctl`), configuration and state paths (`/srv/kagnode/netctl`, `/etc/kagnode/netctl`), JSON product identifier and published history keep their original identifiers._
+_Formerly KagNode. Netctl. The repository is now `every-lemon/kagnode-network`; the crate, executable (`kagnode-netctl`), configuration and state paths (`/srv/kagnode/netctl`, `/etc/kagnode/netctl`), JSON product identifier and published history keep their original identifiers (the repository name is the only one that changed)._
 
 Rust tooling for inspected, reviewable Linux networking and network services.
 
